@@ -68,7 +68,7 @@ export const initBuildFinishedEvent = (options: Partial<IBuildTaskOption>) => {
 
     const handleExportFinished = () => {
       const end = new Date().getTime();
-      console.log(`${BUILDER_NAME} 适配完成，共耗时${((end - start) / 1000).toFixed(0)}秒`)
+      console.log(`${BUILDER_NAME} 适配已经完成...，共耗时${((end - start) / 1000).toFixed(0)}秒`)
       resolve(true)
     }
     const handleExportError = (err: string) => {

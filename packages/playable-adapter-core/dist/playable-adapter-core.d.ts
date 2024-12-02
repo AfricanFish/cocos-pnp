@@ -49,9 +49,14 @@ type TChannelRC = {
   head: string
   body: string
   sdkScript: string
+  inZip: boolean;
 }
 
 type TAdapterRC = {
+  fileName?: string;
+	title?: string;
+	iosUrl?: string;
+	androidUrl?: string;
   buildPlatform?: TPlatform
   orientation?: TWebOrientations
   skipBuild?: boolean

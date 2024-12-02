@@ -24,7 +24,7 @@ type TOptions = {
 }
 
 const paddingStyleTags = ($: CheerioAPI) => {
-  const { enableSplash = true } = getAdapterRCJson() || {}
+  const { enableSplash = true,title } = getAdapterRCJson() || {}
   // Original package path
   const originPkgPath = getOriginPkgPath()
 
@@ -44,6 +44,10 @@ const paddingStyleTags = ($: CheerioAPI) => {
   }
 
   $('link[type="text/css"]').remove()
+
+  if (title) {
+		$('title').text(title);
+	}
 
   // Support for splash screen
   $('head').find('style').each((_index, elem) => {

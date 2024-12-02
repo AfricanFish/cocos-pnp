@@ -1,15 +1,19 @@
-import { join } from "path"
+import path, { basename, extname, join } from "path"
 import { CheerioAPI, load } from "cheerio";
-import { mkdirSync } from "fs"
+import { existsSync, lstatSync, mkdirSync, readFileSync, rename, renameSync, rmdirSync, unlinkSync, writeFileSync } from "fs"
 import { MAX_ZIP_SIZE, REPLACE_SYMBOL } from "@/constants";
 import { injectFromRCJson } from "@/helpers/dom";
 import { TBuilderOptions, TResourceData, TZipFromSingleFileOptions } from "@/typings";
 import { getGlobalProjectBuildPath } from '@/global'
-import { writeToPath, readToPath, getOriginPkgPath, copyDirToPath, replaceGlobalSymbol, rmSync } from "@/utils"
+import { writeToPath, readToPath, getOriginPkgPath, copyDirToPath, replaceGlobalSymbol, rmSync, getAdapterRCJson, getChannelRCJson } from "@/utils"
 import { deflate } from 'pako'
 import { jszipCode } from "@/helpers/injects";
+import JSZip from 'jszip';
+import { readdirSync, statSync } from 'fs';
 
 const FILE_MAX_SIZE = MAX_ZIP_SIZE * .8
+
+const zip = new JSZip();
 
 const globalReplacer = (options: Pick<TBuilderOptions, 'channel' | 'resMapper'> & { $: CheerioAPI }) => {
   const { channel, resMapper } = options
@@ -121,8 +125,10 @@ export const exportSingleFile = async (singleFilePath: string, options: TBuilder
   const { channel, transformHTML, transform } = options
 
   console.info(`【${channel}】adaptation started`)
+  const { fileName } = getAdapterRCJson() || {};
   const singleHtml = readToPath(singleFilePath, 'utf-8')
-  const targetPath = join(getGlobalProjectBuildPath(), `${channel}.html`)
+	const targetPath = join(getGlobalProjectBuildPath(), `${fileName}${channel.toLowerCase()}.html`);
+
 
   // Replace global variables.
   let $ = load(singleHtml)
@@ -141,6 +147,12 @@ export const exportSingleFile = async (singleFilePath: string, options: TBuilder
     await transform(targetPath)
   }
 
+  // Pack in zip
+	let { inZip } = getChannelRCJson(channel) || {};
+	if (inZip) {
+		await createZip(getGlobalProjectBuildPath(), [targetPath], `${fileName}${channel.toLowerCase()}`, zip);
+	}
+
   console.info(`【${channel}】adaptation completed`)
 }
 
@@ -148,10 +160,11 @@ export const exportZipFromPkg = async (options: TBuilderOptions) => {
   const { channel, transformHTML, transform } = options
 
   console.info(`【${channel}】adaptation started`)
+  const { fileName } = getAdapterRCJson() || {};
   // Copy the folder.
   const originPkgPath = getOriginPkgPath()
   const projectBuildPath = getGlobalProjectBuildPath()
-  const destPath = join(projectBuildPath, channel)
+  const destPath = join(projectBuildPath, `${fileName}${channel.toLowerCase()}`);
   copyDirToPath(originPkgPath, destPath)
 
   // Replace global variables.
@@ -175,6 +188,12 @@ export const exportZipFromPkg = async (options: TBuilderOptions) => {
     await transform(destPath)
   }
 
+  	// Pack in zip
+	let { inZip } = getChannelRCJson(channel) || {};
+	if (inZip) {
+		await createZip(getGlobalProjectBuildPath(), [destPath], `${fileName}${channel.toLowerCase()}`, zip);
+	}
+  
   console.info(`【${channel}】adaptation completed`)
 }
 
@@ -183,9 +202,11 @@ export const exportDirZipFromSingleFile = async (singleFilePath: string, options
 
   console.info(`【${channel}】adaptation started`)
   // Copy the folder.
-  const singleHtmlPath = singleFilePath
-  const projectBuildPath = getGlobalProjectBuildPath()
-  const destPath = join(projectBuildPath, channel)
+  const { fileName} = getAdapterRCJson() || {};
+	// Copy the folder.
+	const singleHtmlPath = singleFilePath;
+	const projectBuildPath = getGlobalProjectBuildPath();
+	const destPath = join(projectBuildPath, `${fileName}${channel.toLowerCase()}`);
 
   // Empty the contents of the folder first.
   rmSync(destPath)
@@ -231,3 +252,68 @@ export const exportDirZipFromSingleFile = async (singleFilePath: string, options
 
   console.info(`【${channel}】adaptation completed`)
 }
+
+//打包成一个zip文件
+export const createZip = async (destPath: string, filePaths: string[], zipName: string, zip: JSZip | null) => {
+	if (filePaths.length === 0) {
+		throw new Error('filePath array is empty.');
+	}
+
+	// 遍历文件路径数组
+	for (let filePath of filePaths) {
+		// 检查文件是否存在
+		if (!existsSync(filePath)) {
+			console.error(`file ${filePath} not exists.`);
+			continue;
+		}
+
+		if (lstatSync(filePath).isDirectory()) {
+			readDir(zip, filePath);
+		} else {
+			readFile(zip, filePath, basename(filePath));
+		}
+	}
+	// 生成 zip 文件的内容
+	const zipContent = await zip!.generateAsync({ type: 'nodebuffer' });
+
+	// 将 zip 内容写入到文件中
+	let file_path = path.join(destPath, `${zipName}.zip`);
+	writeFileSync(file_path, zipContent);
+	rename(file_path, path.join(destPath, `${zipName}.zip`), (err) => {
+		if (err) {
+			console.error(`Error moving file: ${err}`);
+		}
+	});
+};
+
+export const readDir = (zip: JSZip | null, nowPath: string): void => {
+	let files = readdirSync(nowPath);
+
+	files.forEach(function (fileName, index) {
+		let filePath = nowPath + '/' + fileName;
+		let file = statSync(filePath);
+
+		if (file.isDirectory()) {
+			let dirlist = zip!.folder(fileName);
+			readDir(dirlist, filePath);
+		} else {
+			readFile(zip, filePath, fileName);
+		}
+	});
+
+	rmdirSync(nowPath);
+};
+
+export const readFile = (zip: JSZip | null, filePath: string, fileName: string): void => {
+	if (extname(filePath) === '.html' && fileName !== 'index.html') {
+		let newPath = path.join(path.dirname(filePath), `index.html`);
+		renameSync(filePath, newPath);
+
+		filePath = newPath;
+		fileName = basename(filePath);
+	}
+
+	zip!.file(fileName, readFileSync(filePath));
+
+	unlinkSync(filePath);
+};

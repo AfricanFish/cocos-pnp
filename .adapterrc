@@ -1,0 +1,38 @@
+{
+	"fileName": "fz09812h5",
+	"title": "IGG_H5",
+	"iosUrl": "https://itunes.apple.com/id/app/id1071976327?l=id&mt=8",
+	"androidUrl": "https://play.google.com/store/apps/details?id=com.igg.android.lordsmobile&hl=id",
+	"buildPlatform": "web-mobile",
+	"exportChannels": [
+		"Unity",
+		"Liftoff",
+		"Tiktok",
+		"Moloco",
+		"IronSource"
+	],
+	"orientation": "auto",
+	"enableSplash": "false",
+	"injectOptions": {
+		"Unity": {
+			"body": "<script> var iosUrl = '<ios>'; var androidUrl = '<android>'; function showAds() { var userAgent = navigator.userAgent || navigator.vendor; if (userAgent.match(/iPad/i) || userAgent.match(/iPhone/i) || userAgent.match(/iPod/i)) { url = iosUrl; } else if (userAgent.match(/Android/i)) { url = androidUrl; } else { url = iosUrl; } try { mraid.open(url); } catch (e) { console.error(e); var isMac = /macintosh|mac os x/i.test(navigator.userAgent); var isWindows = /windows|win32/i.test(navigator.userAgent); if (isMac) { url = iosUrl; } else if (isWindows) { url = androidUrl; } window.open(url); } } </script>"
+		},
+		"Liftoff": {
+			"body": "<script> var iosUrl = '<ios>'; var androidUrl = '<android>'; function showAds() { var userAgent = navigator.userAgent || navigator.vendor; if (userAgent.match(/iPad/i) || userAgent.match(/iPhone/i) || userAgent.match(/iPod/i)) { url = iosUrl; } else if (userAgent.match(/Android/i)) { url = androidUrl; } else { url = iosUrl; } try { mraid.open(url); } catch (e) { console.error(e); var isMac = /macintosh|mac os x/i.test(navigator.userAgent); var isWindows = /windows|win32/i.test(navigator.userAgent); if (isMac) { url = iosUrl; } else if (isWindows) { url = androidUrl; } window.open(url); } } </script>",
+			"inZip": true
+		},
+		"Tiktok": {
+			"body": "<script>function showAds() {window.openAppStore();}</script>",
+			"inZip": true 
+		},
+		"Moloco": {
+			"body": "<script>function showAds() {FbPlayableAd.onCTAClick(); }</script>"
+		},
+		"IronSource": {
+			"body": "<script>function showAds() { dapi.openStoreUrl(); }</script>"
+		}
+	},
+	"tinify": true,
+	"tinifyApiKey": "M2ScBh5lTVtpt51lP8ls3xXLR0JCpqMT",
+	"isZip": true
+}
