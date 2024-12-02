@@ -9,6 +9,8 @@ import json from '@rollup/plugin-json'
 import typescript from '@rollup/plugin-typescript';
 import terser from '@rollup/plugin-terser';
 import alias from '@rollup/plugin-alias'
+import path from 'path'
+import os from 'os'
 
 const appName = pkgJson.name
 const appVersion = pkgJson.version
@@ -61,8 +63,17 @@ export default {
     }),
     cocosPluginWorker(),
     cocosPluginUpdater({
-      src: `${__dirname}/${outputDir}`,
-      dest: `~/.CocosCreator/${is2xBuilder ? 'packages' : 'extensions'}/${appName}`
+      src: path.join(__dirname, outputDir),
+      dest: (() => {
+        const destPath = path.join(
+          os.homedir(), // 获取用户主目录，跨平台支持
+          'Desktop',
+          appName
+        );
+        console.log('Plugin updater dest path:', destPath);
+        return destPath;
+      })(),
+      
     }),
   ],
   external: ['fs', 'path', 'os', 'electron']
