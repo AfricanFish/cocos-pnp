@@ -9,6 +9,7 @@
 pnpm add rimraf --save-dev 
 
 //在playable-adapter-core 包下添加依赖包
+
 pnpm add jszip
 
 
