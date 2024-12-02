@@ -1,7 +1,11 @@
 修改了打包可在windows下使用
+
     "clear": "rm -rf dist/",
+
     "clear": "rimraf dist/",
+
 //添加依赖包
+
 pnpm add rimraf --save-dev 
 
 
