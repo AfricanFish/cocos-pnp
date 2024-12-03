@@ -63,15 +63,15 @@ export default {
     }),
     cocosPluginWorker(),
     cocosPluginUpdater({
-      src: path.join(__dirname, outputDir),
+      src: (() => {
+        const srcPath = path.join(__dirname, outputDir);
+        console.log('Plugin updater src path:', srcPath);
+        return srcPath;
+      })(),
       dest: (() => {
-        const destPath = path.join(
-          os.homedir(), // 获取用户主目录，跨平台支持
-          'Desktop',
-          appName
-        );
-        console.log('Plugin updater dest path:', destPath);
-        return destPath;
+        const finalPath = path.resolve(os.homedir(), '.CocosCreator', is2xBuilder ? 'packages' : 'extensions', appName);
+        console.log('Plugin updater dest path:', finalPath);
+        return finalPath;
       })(),
       
     }),

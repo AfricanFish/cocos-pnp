@@ -11,7 +11,9 @@ export default function cocosPluginUpdater(options) {
       }
 
       console.log('cocos-plugin-update copy folder to global cocos plugin packages')
-      run(`rm -rf ${dest} && cp -r ${src} ${dest}`)
+      run(`if exist "${dest}" rd /s /q "${dest}"`)
+      // 创建目标目录并复制
+      run(`mkdir "${dest}" && xcopy "${src}" "${dest}" /E /I /H /Y`)
       console.log('cocos-plugin-update copy folder success')
     }
   }

@@ -3,15 +3,34 @@ import { existsSync } from "fs"
 import { join } from "path"
 import { readToPath } from "./base"
 
+
+const iosTag: string = '<ios>';
+const androidTag: string = '<android>';
+
 export const readAdapterRCFile = (): TAdapterRC | null => {
   const projectRootPath = Editor.Project.path
   const adapterRCJsonPath = `${projectRootPath}${ADAPTER_RC_PATH}`
   if (existsSync(adapterRCJsonPath)) {
-    return <TAdapterRC>JSON.parse(readToPath(adapterRCJsonPath))
-  }
+		let config = <TAdapterRC>JSON.parse(readToPath(adapterRCJsonPath));
+
+		if (config.injectOptions) {
+			for (const channel in config.injectOptions) {
+				if (config.injectOptions.hasOwnProperty(channel)) {
+					const typedChannel = channel as keyof typeof config.injectOptions;
+					config.injectOptions[typedChannel].body = modifyBody(config.injectOptions[typedChannel].body, config);
+				}
+			}
+		}
+		return config;
+	}
 
   return null
 }
+
+const modifyBody = (body: string, config: TAdapterRC): string => {
+	const { iosUrl, androidUrl } = config || {};
+	return body.replaceAll(iosTag, iosUrl!).replaceAll(androidTag, androidUrl!);
+};
 
 export const getAdapterConfig = () => {
   const projectRootPath = Editor.Project.path
